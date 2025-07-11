@@ -2,8 +2,8 @@
 
 ## Project Overview
 
-**Owner:** Alex (UK, engaged to Helen, 9-year-old son Albie)  
-**Hardware:** Raspberry Pi Zero 2W + Pimoroni Enviro+ HAT  
+**Owner:** Alex  
+**Hardware:** Raspberry Pi Zero W + Pimoroni Enviro+ HAT  
 **Focus Areas:**
 - Indoor air quality monitoring
 - Smart home integration (MQTT/Home Assistant)
@@ -13,7 +13,7 @@
 ## Hardware Configuration
 
 ### Current Setup
-- **Platform:** Raspberry Pi Zero2W (hostname: zero2.local)
+- **Platform:** Raspberry Pi Zero W (hostname: zero.local)
 - **HAT:** Pimoroni Enviro+ 
 - **Python Environment:** ~/home/pi/pyenv (venv sourced at startup)
 - **Scripts Location:** ~/home/pi/pyenv/python
@@ -218,7 +218,7 @@ pip install -r requirements-test.txt
 
 ## Ideas for Extensions
 
-### Educational (for Albie)
+### Educational
 - Weather prediction based on pressure trends
 - Air quality science experiments
 - Simple alerting system for room conditions
