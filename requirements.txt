@@ -5,11 +5,13 @@
 RPi.GPIO>=0.7.1
 spidev>=3.5
 
-# Pimoroni libraries
-enviroplus>=1.0.1
-st7735>=0.0.4
-ltr559>=0.1.1
-bme280>=0.0.4
+# Pimoroni libraries - provided by official Pimoroni installer
+# DO NOT install via pip - use official installer instead:
+# curl https://get.pimoroni.com/enviroplus | bash
+# enviroplus>=1.0.1
+# st7735>=0.0.4
+# ltr559>=0.1.1
+# bme280>=0.0.4
 
 # Image processing for display
 Pillow>=9.0.0
