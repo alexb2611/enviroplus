@@ -1,0 +1,69 @@
+# config.yaml
+# Configuration file for Enviro+ Data Logger
+
+# Data collection settings
+data_collection:
+  log_interval: 60  # seconds between database/CSV writes
+  display_update: 1  # seconds between display updates
+  data_directory: "./data"
+
+# Sensor calibration
+sensors:
+  temperature:
+    compensation_factor: 2.25  # CPU heat compensation
+    cpu_temp_samples: 5        # Moving average samples
+  
+  gas:
+    burn_in_hours: 48          # Stabilization period for gas sensors
+    
+  pressure:
+    altitude_compensation: 0   # meters above sea level
+
+# Display settings
+display:
+  proximity_threshold: 1500    # Proximity sensor trigger level
+  debounce_delay: 0.5         # Seconds between mode switches
+  font_size: 20               # Display font size
+  backlight_timeout: 0        # 0 = always on, >0 = timeout in seconds
+
+# Air quality thresholds (for future alerting)
+air_quality:
+  temperature:
+    min_optimal: 18.0  # °C
+    max_optimal: 24.0  # °C
+    min_acceptable: 15.0
+    max_acceptable: 28.0
+  
+  humidity:
+    min_optimal: 40.0  # %
+    max_optimal: 60.0  # %
+    min_acceptable: 30.0
+    max_acceptable: 70.0
+  
+  pressure:
+    min_normal: 980.0   # hPa
+    max_normal: 1050.0  # hPa
+
+# MQTT settings (for future smart home integration)
+mqtt:
+  enabled: false
+  broker: "localhost"
+  port: 1883
+  username: ""
+  password: ""
+  topic_prefix: "enviroplus"
+  discovery_prefix: "homeassistant"  # For Home Assistant auto-discovery
+
+# Logging settings
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  max_file_size: "10MB"
+  backup_count: 5
+  console_output: true
+
+# Web dashboard settings (for future implementation)
+web:
+  enabled: false
+  host: "0.0.0.0"
+  port: 5000
+  debug: false

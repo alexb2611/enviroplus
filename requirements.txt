@@ -1,0 +1,36 @@
+# requirements.txt
+# Main dependencies for Enviro+ Data Logger
+
+# Raspberry Pi GPIO and hardware interfaces
+RPi.GPIO>=0.7.1
+spidev>=3.5
+
+# Pimoroni libraries
+enviroplus>=1.0.1
+st7735>=0.0.4
+ltr559>=0.1.1
+bme280>=0.0.4
+
+# Image processing for display
+Pillow>=9.0.0
+
+# Data handling
+pandas>=1.5.0
+numpy>=1.21.0
+
+# Web framework (for future dashboard)
+flask>=2.3.0
+
+# MQTT support (for smart home integration)
+paho-mqtt>=1.6.0
+
+# Configuration management
+pyyaml>=6.0
+
+# Logging and utilities
+python-dateutil>=2.8.0
+pytz>=2023.3
+
+# Development tools
+black>=23.0.0
+flake8>=6.0.0
