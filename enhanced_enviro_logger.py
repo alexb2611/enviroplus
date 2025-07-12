@@ -38,7 +38,7 @@ logging.basicConfig(
     level=logging.INFO,
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[
-        logging.FileHandler('/home/pi/pyenv/python/enviro_data.log'),
+        logging.FileHandler('./enviro_data.log'),
         logging.StreamHandler()
     ]
 )
@@ -46,7 +46,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class EnviroDataLogger:
-    def __init__(self, data_dir='/home/pi/pyenv/python/data'):
+    def __init__(self, data_dir='./data'):
         """
         Initialize the Enviro+ data logger
         
