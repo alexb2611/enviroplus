@@ -62,7 +62,9 @@ class EnviroDataLogger:
         
         # CPU temperature tracking for compensation
         self.cpu_temps = [self.get_cpu_temperature()] * 5
-        self.temp_compensation_factor = 2.25
+        # Compensation factor calibrated with DHT11 reference sensor
+        # Pi Zero 2W generates significant heat - factor 1.4 removes ~10°C CPU heat soak
+        self.temp_compensation_factor = 1.4
         
         # Display control
         self.delay = 0.5  # Debounce for proximity tap
@@ -154,7 +156,7 @@ class EnviroDataLogger:
             logger.error(f"Failed to read CPU temperature: {e}")
             return 50.0  # Fallback value
     
-    def read_sensors(self):
+    def read_sensors(self, verbose_temp_debug=False):
         """
         Read all sensor values with error handling
         
@@ -193,6 +195,10 @@ class EnviroDataLogger:
                 raw_temp = self.bme280.get_temperature()
                 compensated_temp = raw_temp - ((avg_cpu_temp - raw_temp) / self.temp_compensation_factor)
                 reading['temperature'] = compensated_temp
+                
+                # Debug output for temperature compensation monitoring (only when requested)
+                if verbose_temp_debug:
+                    logger.info(f"Temperature compensation: Raw={raw_temp:.1f}°C, CPU={avg_cpu_temp:.1f}°C, Compensated={compensated_temp:.1f}°C, Factor={self.temp_compensation_factor}")
                 
                 reading['pressure'] = self.bme280.get_pressure()
                 reading['humidity'] = self.bme280.get_humidity()
@@ -376,18 +382,21 @@ class EnviroDataLogger:
                 
                 # Log data at specified interval
                 if current_time - last_log_time >= log_interval:
-                    self.save_to_database(reading)
-                    self.save_to_csv(reading)
+                    # Get fresh reading with verbose temperature debug for logging
+                    log_reading = self.read_sensors(verbose_temp_debug=True)
+                    
+                    self.save_to_database(log_reading)
+                    self.save_to_csv(log_reading)
                     last_log_time = current_time
                     
                     # Log summary to console
-                    if reading['errors']:
-                        logger.warning(f"Errors: {', '.join(reading['errors'])}")
+                    if log_reading['errors']:
+                        logger.warning(f"Errors: {', '.join(log_reading['errors'])}")
                     else:
-                        logger.info(f"Data logged: T={reading['temperature']:.1f}°C, "
-                                  f"P={reading['pressure']:.1f}hPa, "
-                                  f"H={reading['humidity']:.1f}%, "
-                                  f"L={reading['light']:.0f}lux")
+                        logger.info(f"Data logged: T={log_reading['temperature']:.1f}°C, "
+                                  f"P={log_reading['pressure']:.1f}hPa, "
+                                  f"H={log_reading['humidity']:.1f}%, "
+                                  f"L={log_reading['light']:.0f}lux")
                 
                 time.sleep(1)  # Update display every second
                 
