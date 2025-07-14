@@ -58,7 +58,7 @@ A comprehensive environmental monitoring system built with the Pimoroni Enviro+ 
 
 ### Calibration Process
 1. **Reference sensor**: DHT11 placed in same location as Enviro+
-2. **Iterative testing**: Started with factor 2.25, adjusted to 3.2, then 2.0, finally 1.4
+2. **Iterative testing**: Started with factor 2.25, adjusted to 2.0, finally 1.4
 3. **Verification**: Enviro+ 26.1°C vs DHT11 26.0°C = 0.1°C accuracy
 
 ### Why Different?
@@ -86,7 +86,7 @@ Temperature compensation: Raw=35.6°C, CPU=49.5°C, Compensated=26.1°C, Factor=
 ### 2. Software Installation
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/enviroplus.git
+git clone https://github.com/alexb2611/enviroplus.git
 cd enviroplus
 
 # Create virtual environment
