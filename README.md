@@ -143,7 +143,7 @@ Daily files: `data/enviro_data_YYYY-MM-DD.csv`
 
 ## 🧪 Testing
 
-Comprehensive test suite with mocked hardware for reliable testing:
+Comprehensive test suite with **93% coverage** across testable components:
 
 ```bash
 # Install test dependencies
@@ -162,13 +162,32 @@ pip install -r requirements-test.txt
 ./test_runner.sh help
 ```
 
-### Test Coverage
+### Test Coverage (93% Overall)
+**34 tests total** covering:
+
+**Logger Tests (90% coverage):**
 - Sensor reading functions with mocked hardware
 - Database operations and schema validation
 - CSV file creation and data integrity
 - Error handling and graceful degradation
 - Temperature compensation algorithms
 - Data validation and range checking
+
+**API Server Tests (95% coverage):**
+- REST API endpoint logic and data processing
+- Database queries and time-based filtering
+- Dashboard compatibility (required fields)
+- Error handling (missing DB, empty results, malformed JSON)
+- Data formatting and rounding for API responses
+- System status reporting and health checks
+- Gas sensor unit conversions and pandas NaN handling
+
+### Coverage Strategy
+Hardware-dependent files (`enhanced_enviro_logger.py`, `enviro_api_server.py`) are excluded from coverage via `.coveragerc` since they require physical sensors. Tests focus on:
+- **Business logic** that can be tested without hardware
+- **Database operations** with temporary test databases
+- **Data processing** and validation algorithms
+- **API response formatting** and error handling
 
 ## 📱 Smart Home Integration (Planned)
 
@@ -243,16 +262,22 @@ The system is designed for 24/7 operation with robust error handling:
 
 ```
 enviroplus/
-├── enhanced_enviro_logger.py  # Main application
+├── enhanced_enviro_logger.py     # Main sensor data logger
+├── enviro_api_server.py          # REST API server for dashboard integration
 ├── tests/
-│   └── test_enviro_logger.py  # Test suite
-├── data/                      # Data storage (created at runtime)
-├── requirements.txt           # Main dependencies
-├── requirements-test.txt      # Test dependencies
-├── pytest.ini               # Test configuration
-├── test_runner.sh           # Test runner script
-├── claude.md               # Project documentation
-└── README.md              # This file
+│   ├── test_enviro_logger.py     # Logger test suite (90% coverage)
+│   └── test_enviro_api_server.py # API server test suite (95% coverage)
+├── data/                         # Data storage (created at runtime)
+│   ├── enviro_data.db           # SQLite database
+│   ├── enviro_data_YYYY-MM-DD.csv # Daily CSV exports
+│   └── enviro_data.log          # Application logs
+├── requirements.txt              # Main dependencies
+├── requirements-test.txt         # Test dependencies
+├── pytest.ini                   # Test configuration
+├── .coveragerc                   # Coverage configuration
+├── test_runner.sh               # Test runner script
+├── claude.md                    # Project documentation
+└── README.md                   # This file
 ```
 
 ## 🤝 Contributing

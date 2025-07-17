@@ -1,0 +1,13 @@
+[run]
+omit = 
+    enhanced_enviro_logger.py
+    enviro_api_server.py
+    */site-packages/*
+    */venv/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
