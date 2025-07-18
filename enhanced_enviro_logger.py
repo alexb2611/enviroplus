@@ -62,12 +62,20 @@ class EnviroDataLogger:
         
         # CPU temperature tracking for compensation
         self.cpu_temps = [self.get_cpu_temperature()] * 5
-        self.temp_compensation_factor = 2.25
+        # Compensation factor calibrated with DHT11 reference sensor
+        # Pi Zero 2W generates significant heat - factor 1.4 removes ~10°C CPU heat soak
+        self.temp_compensation_factor = 1.4
         
         # Display control
         self.delay = 0.5  # Debounce for proximity tap
         self.mode = 0     # Current display mode
         self.last_page = 0
+        
+        # Display power management
+        self.display_timeout = 300  # 5 minutes in seconds
+        self.display_on = True
+        self.last_activity_time = time.time()
+        self.proximity_wake_threshold = 1500  # Proximity value to wake display
         
         # Create sensor variables and display data storage
         self.variables = ["temperature", "pressure", "humidity", "light", 
@@ -154,7 +162,7 @@ class EnviroDataLogger:
             logger.error(f"Failed to read CPU temperature: {e}")
             return 50.0  # Fallback value
     
-    def read_sensors(self):
+    def read_sensors(self, verbose_temp_debug=False):
         """
         Read all sensor values with error handling
         
@@ -193,6 +201,10 @@ class EnviroDataLogger:
                 raw_temp = self.bme280.get_temperature()
                 compensated_temp = raw_temp - ((avg_cpu_temp - raw_temp) / self.temp_compensation_factor)
                 reading['temperature'] = compensated_temp
+                
+                # Debug output for temperature compensation monitoring (only when requested)
+                if verbose_temp_debug:
+                    logger.info(f"Temperature compensation: Raw={raw_temp:.1f}°C, CPU={avg_cpu_temp:.1f}°C, Compensated={compensated_temp:.1f}°C, Factor={self.temp_compensation_factor}")
                 
                 reading['pressure'] = self.bme280.get_pressure()
                 reading['humidity'] = self.bme280.get_humidity()
@@ -299,8 +311,49 @@ class EnviroDataLogger:
         except Exception as e:
             logger.error(f"CSV save error: {e}")
     
+    def turn_display_off(self):
+        """Turn off the display backlight and clear screen"""
+        try:
+            self.st7735.set_backlight(0)
+            # Clear the display to black
+            self.draw.rectangle((0, 0, self.WIDTH, self.HEIGHT), (0, 0, 0))
+            self.st7735.display(self.img)
+            self.display_on = False
+            logger.info("Display turned off after timeout")
+        except Exception as e:
+            logger.error(f"Error turning off display: {e}")
+    
+    def turn_display_on(self):
+        """Turn on the display backlight"""
+        try:
+            self.st7735.set_backlight(1)
+            self.display_on = True
+            self.last_activity_time = time.time()
+            logger.info("Display turned on by proximity detection")
+        except Exception as e:
+            logger.error(f"Error turning on display: {e}")
+    
+    def check_display_timeout(self):
+        """Check if display should be turned off due to timeout"""
+        current_time = time.time()
+        if (self.display_on and 
+            current_time - self.last_activity_time > self.display_timeout):
+            self.turn_display_off()
+    
+    def handle_proximity_wake(self, proximity):
+        """Handle proximity sensor for waking display"""
+        if (not self.display_on and 
+            proximity and proximity > self.proximity_wake_threshold):
+            self.turn_display_on()
+            return True
+        return False
+    
     def display_text(self, variable, data, unit):
         """Display sensor data on LCD with graph"""
+        # Only update display if it's on
+        if not self.display_on:
+            return
+            
         # Maintain length of list
         self.values[variable] = self.values[variable][1:] + [data]
         
@@ -360,34 +413,48 @@ class EnviroDataLogger:
                 # Read sensors
                 reading = self.read_sensors()
                 
-                # Handle display cycling with proximity sensor
+                # Handle proximity sensor for display wake and page cycling
                 proximity = reading.get('proximity', 0)
-                if proximity and proximity > 1500 and current_time - self.last_page > self.delay:
+                
+                # Check if proximity should wake the display
+                display_woken = self.handle_proximity_wake(proximity)
+                
+                # Handle display cycling with proximity sensor (only if display is on)
+                if (self.display_on and proximity and proximity > 1500 and 
+                    current_time - self.last_page > self.delay and not display_woken):
                     self.mode += 1
                     self.mode %= len(self.variables)
                     self.last_page = current_time
+                    self.last_activity_time = current_time  # Reset activity timer
                 
-                # Display current mode
-                var_name = self.variables[self.mode]
-                var_value = reading.get(var_name.replace('oxidised', 'oxidised').replace('reduced', 'reduced'))
-                var_unit = self.units[self.mode]
+                # Check for display timeout
+                self.check_display_timeout()
                 
-                self.display_text(var_name, var_value, var_unit)
+                # Display current mode (only if display is on)
+                if self.display_on:
+                    var_name = self.variables[self.mode]
+                    var_value = reading.get(var_name.replace('oxidised', 'oxidised').replace('reduced', 'reduced'))
+                    var_unit = self.units[self.mode]
+                    
+                    self.display_text(var_name, var_value, var_unit)
                 
                 # Log data at specified interval
                 if current_time - last_log_time >= log_interval:
-                    self.save_to_database(reading)
-                    self.save_to_csv(reading)
+                    # Get fresh reading with verbose temperature debug for logging
+                    log_reading = self.read_sensors(verbose_temp_debug=True)
+                    
+                    self.save_to_database(log_reading)
+                    self.save_to_csv(log_reading)
                     last_log_time = current_time
                     
                     # Log summary to console
-                    if reading['errors']:
-                        logger.warning(f"Errors: {', '.join(reading['errors'])}")
+                    if log_reading['errors']:
+                        logger.warning(f"Errors: {', '.join(log_reading['errors'])}")
                     else:
-                        logger.info(f"Data logged: T={reading['temperature']:.1f}°C, "
-                                  f"P={reading['pressure']:.1f}hPa, "
-                                  f"H={reading['humidity']:.1f}%, "
-                                  f"L={reading['light']:.0f}lux")
+                        logger.info(f"Data logged: T={log_reading['temperature']:.1f}°C, "
+                                  f"P={log_reading['pressure']:.1f}hPa, "
+                                  f"H={log_reading['humidity']:.1f}%, "
+                                  f"L={log_reading['light']:.0f}lux")
                 
                 time.sleep(1)  # Update display every second
                 

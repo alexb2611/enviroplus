@@ -10,7 +10,7 @@ data_collection:
 # Sensor calibration
 sensors:
   temperature:
-    compensation_factor: 2.25  # CPU heat compensation
+    compensation_factor: 1.4  # CPU heat compensation (calibrated with DHT11 - removes ~10°C heat soak)
     cpu_temp_samples: 5        # Moving average samples
   
   gas:
